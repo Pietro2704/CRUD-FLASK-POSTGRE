@@ -28,7 +28,7 @@ COLUMN_TYPES = {
 # Nomes de banco/tabela/coluna não podem ser passados como parâmetros de
 # query (psycopg2 só parametriza valores), então validamos o formato aqui
 # e usamos sql.Identifier para montar o SQL com segurança.
-IDENTIFIER_RE = re.compile(r"^[A-Za-z\_][A-Za-z0-9\_]\*$")
+IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 def is_valid_identifier(name):
@@ -92,6 +92,8 @@ def create_database():
     return redirect(url_for("index"))
 
 
+# ---------- Tabelas ----------
+
 @app.route("/db/<dbname>/tables")
 def list_tables(dbname):
     if not is_valid_identifier(dbname):
@@ -113,6 +115,60 @@ def list_tables(dbname):
         "tables.html", dbname=dbname, tables=tables, column_types=COLUMN_TYPES
     )
 
+
+@app.route("/db/<dbname>/tables/create", methods=["POST"])
+def create_table(dbname):
+    if not is_valid_identifier(dbname):
+        abort(404)
+
+    table_name = request.form.get("table_name", "").strip()
+    col_names = request.form.getlist("col_name")
+    col_types = request.form.getlist("col_type")
+    col_nullable = request.form.getlist("col_nullable")
+
+    if not is_valid_identifier(table_name):
+        flash("Nome de tabela inválido.")
+        return redirect(url_for("list_tables", dbname=dbname))
+
+    if not col_names:
+        flash("Adicione ao menos uma coluna.")
+        return redirect(url_for("list_tables", dbname=dbname))
+
+    column_defs = [sql.SQL("id SERIAL PRIMARY KEY")]
+    seen = {"id"}
+    for name, ctype, nullable in zip(col_names, col_types, col_nullable):
+        name = name.strip()
+        if not is_valid_identifier(name) or name.lower() in seen:
+            flash(f"Nome de coluna inválido ou duplicado: '{name}'")
+            return redirect(url_for("list_tables", dbname=dbname))
+        if ctype not in COLUMN_TYPES:
+            flash(f"Tipo de coluna inválido: '{ctype}'")
+            return redirect(url_for("list_tables", dbname=dbname))
+        seen.add(name.lower())
+
+        type_sql = sql.SQL(COLUMN_TYPES[ctype])
+        null_sql = sql.SQL("NOT NULL") if nullable == "no" else sql.SQL("")
+        column_defs.append(
+            sql.SQL("{} {} {}").format(sql.Identifier(name), type_sql, null_sql)
+        )
+
+    query = sql.SQL("CREATE TABLE {} ({})").format(
+        sql.Identifier(table_name), sql.SQL(", ").join(column_defs)
+    )
+
+    conn = db.get_connection(dbname=dbname)
+    try:
+        with conn.cursor() as cur:
+            cur.execute(query)
+        conn.commit()
+        flash(f"Tabela '{table_name}' criada com sucesso!")
+    except Exception:
+        conn.rollback()
+        app.logger.exception("Erro ao criar tabela '%s' em '%s'", table_name, dbname)
+        flash("Erro ao criar tabela. Verifique os logs do servidor.")
+    finally:
+        conn.close()
+    return redirect(url_for("list_tables", dbname=dbname))
 
 
 

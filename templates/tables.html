@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Tabelas de {{ dbname }}{% endblock %}
+
+{% block content %}
+<p>
+  <a href="{{ url_for('index') }}" class="link-underline-opacity-0">
+    <i class="bi bi-arrow-left"></i> Bancos de dados
+  </a>
+</p>
+<h1 class="h3 mb-4 text-brand"><i class="bi bi-database"></i> Banco: {{ dbname }}</h1>
+
+<div class="card card-brand shadow-sm mb-4">
+  <div class="card-header card-header-brand">
+    <i class="bi bi-plus-circle"></i> Criar nova tabela
+  </div>
+  <div class="card-body">
+    <form method="post" action="{{ url_for('create_table', dbname=dbname) }}" id="create-table-form">
+      <div class="mb-3">
+        <label for="table_name" class="form-label">Nome da tabela</label>
+        <input type="text" class="form-control" id="table_name" name="table_name"
+               pattern="[A-Za-z_][A-Za-z0-9_]*" required placeholder="ex: clientes">
+      </div>
+
+      <h2 class="h6 text-brand">
+        Colunas <small class="text-body-secondary">(a coluna "id" é criada automaticamente como chave primária)</small>
+      </h2>
+      <div id="columns" class="d-flex flex-column gap-2 mb-3"></div>
+      <button type="button" class="btn btn-outline-primary btn-sm mb-3" onclick="addColumn()">
+        <i class="bi bi-plus-lg"></i> Adicionar coluna
+      </button>
+      <br>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-lg"></i> Criar tabela
+      </button>
+    </form>
+  </div>
+</div>
+
+<h2 class="h5 mb-3 text-brand">Tabelas existentes</h2>
+{% if tables %}
+<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+  {% for t in tables %}
+  <div class="col">
+    <div class="card card-brand h-100 shadow-sm">
+      <div class="card-body d-flex align-items-center gap-3">
+        <i class="bi bi-table"></i>
+        <h3 class="h6 mb-0">{{ t }}</h3>
+      </div>
+      <div class="card-footer bg-white border-0 pt-0">
+        <a href="{{ url_for('view_table', dbname=dbname, table_name=t) }}" class="btn btn-outline-primary btn-sm w-100">
+          <i class="bi bi-list-ul"></i> Ver registros
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert bg-brand-soft border-0">
+  <i class="bi bi-info-circle"></i> Nenhuma tabela criada ainda.
+</div>
+{% endif %}
+
+<script>
+  const typeOptions = {{ column_types.keys() | list | tojson }};
+
+  function addColumn() {
+    const container = document.getElementById('columns');
+    const div = document.createElement('div');
+    div.className = 'column-row d-flex flex-wrap gap-2 align-items-center';
+    div.innerHTML = `
+      <input type="text" name="col_name" class="form-control" style="max-width: 220px"
+             placeholder="nome da coluna" pattern="[A-Za-z_][A-Za-z0-9_]*" required>
+      <select name="col_type" class="form-select" style="max-width: 160px">
+        ${typeOptions.map(t => `<option value="${t}">${t}</option>`).join('')}
+      </select>
+      <select name="col_nullable" class="form-select" style="max-width: 200px">
+        <option value="yes">Permite nulo</option>
+        <option value="no">Obrigatório (NOT NULL)</option>
+      </select>
+      <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.column-row').remove()">
+        <i class="bi bi-trash"></i>
+      </button>
+    `;
+    container.appendChild(div);
+  }
+  // começa com uma linha de coluna
+  addColumn();
+</script>
+{% endblock %}
