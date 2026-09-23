@@ -6,19 +6,22 @@
 <h1 class="h3 mb-4 text-brand"><i class="bi bi-hdd-stack"></i> Bancos de Dados PostgreSQL</h1>
 
 <div class="card card-brand shadow-sm mb-4">
-  <div class="card-header card-header-brand">
-    <i class="bi bi-plus-circle"></i> Criar novo banco de dados
+  <div class="card-header card-header-brand d-flex align-items-center gap-2">
+    <i class="bi bi-plus-circle"></i>
+    <span>Criar novo banco de dados</span>
   </div>
   <div class="card-body">
     <form method="post" action="{{ url_for('create_database') }}" class="row g-2 align-items-end">
       <div class="col-sm-8">
         <label for="dbname" class="form-label">Nome do banco</label>
-        <input type="text" class="form-control" id="dbname" name="dbname"
-               pattern="[A-Za-z_][A-Za-z0-9_]*" required placeholder="ex: meu_banco">
+        <input type="text" class="form-control" id="dbname" name="dbname" pattern="[A-Za-z_][A-Za-z0-9_]*" required
+          placeholder="ex: meu_banco">
       </div>
+
       <div class="col-sm-4">
-        <button type="submit" class="btn btn-primary w-100">
-          <i class="bi bi-plus-lg"></i> Criar banco
+        <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2">
+          <i class="bi bi-plus-lg"></i>
+          <span>Criar banco</span>
         </button>
       </div>
     </form>
