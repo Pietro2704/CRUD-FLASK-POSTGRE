@@ -1,0 +1,130 @@
+/*
+  Paleta extraída do favicon (static/images/favicon.png) via k-means:
+  --brand-navy-900  #0c263e  57.7% dos pixels -> fundo do círculo / navbar
+  --brand-navy-700  #134164  19.5%             -> tom escuro secundário
+  --brand-blue-500  #2f72a4   6.4%             -> anel intermediário
+  --brand-cyan-500  #30a7e2   3.7%             -> anel vivo (cor de destaque)
+  --brand-cyan-300  #87d9ed   6.8%             -> brilho claro
+  --brand-white     #f6f8f9   5.9%             -> traços/texto do ícone
+*/
+:root {
+  --brand-navy-900: #0c263e;
+  --brand-navy-700: #134164;
+  --brand-blue-500: #2f72a4;
+  --brand-cyan-500: #30a7e2;
+  --brand-cyan-300: #87d9ed;
+  --brand-white: #f6f8f9;
+
+  --bs-body-bg: #f2f6fa;
+  --bs-body-color: #14263a;
+  --bs-link-color: var(--brand-blue-500);
+  --bs-link-hover-color: var(--brand-cyan-500);
+  --bs-link-color-rgb: 47, 114, 164;
+  --bs-link-hover-color-rgb: 48, 167, 226;
+  --bs-focus-ring-color: rgba(48, 167, 226, 0.25);
+}
+
+/* ---------- Navbar ---------- */
+.navbar-brand-app {
+  background: linear-gradient(135deg, var(--brand-navy-900), var(--brand-navy-700));
+}
+
+.navbar-brand-app .navbar-brand {
+  color: var(--brand-white);
+  font-weight: 600;
+}
+
+.navbar-brand-app .navbar-brand img {
+  height: 32px;
+  width: 32px;
+  margin-right: 0.5rem;
+}
+
+.navbar-brand-app .nav-link {
+  color: rgba(246, 248, 249, 0.85);
+}
+
+.navbar-brand-app .nav-link:hover {
+  color: var(--brand-cyan-300);
+}
+
+/* ---------- Botões ---------- */
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--brand-cyan-500);
+  --bs-btn-border-color: var(--brand-cyan-500);
+  --bs-btn-hover-bg: var(--brand-blue-500);
+  --bs-btn-hover-border-color: var(--brand-blue-500);
+  --bs-btn-active-bg: var(--brand-blue-500);
+  --bs-btn-active-border-color: var(--brand-blue-500);
+  --bs-btn-focus-shadow-rgb: 48, 167, 226;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--brand-blue-500);
+  --bs-btn-border-color: var(--brand-cyan-500);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--brand-cyan-500);
+  --bs-btn-hover-border-color: var(--brand-cyan-500);
+  --bs-btn-active-bg: var(--brand-cyan-500);
+  --bs-btn-active-border-color: var(--brand-cyan-500);
+  --bs-btn-focus-shadow-rgb: 48, 167, 226;
+}
+
+/* ---------- Cards de banco/tabela ---------- */
+.card-brand {
+  border: 1px solid #dbe6ee;
+  border-radius: 0.75rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.card-brand:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1.25rem rgba(12, 38, 62, 0.12);
+  border-color: var(--brand-cyan-500);
+}
+
+.card-brand .bi {
+  color: var(--brand-cyan-500);
+  font-size: 1.75rem;
+}
+
+.card-header-brand {
+  background: var(--brand-navy-900);
+  color: var(--brand-white);
+  border-radius: 0.75rem 0.75rem 0 0 !important;
+}
+
+/* ---------- Tabelas ---------- */
+.table-brand thead {
+  background: var(--brand-navy-900);
+  color: var(--brand-white);
+}
+
+.table-brand thead th {
+  border-color: var(--brand-navy-900);
+  vertical-align: middle;
+}
+
+/* ---------- Formulários ---------- */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--brand-cyan-500);
+  box-shadow: 0 0 0 0.2rem rgba(48, 167, 226, 0.25);
+}
+
+.column-row {
+  background: #fff;
+  border: 1px solid #dbe6ee;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
+/* ---------- Utilidades ---------- */
+.text-brand {
+  color: var(--brand-navy-900) !important;
+}
+
+.bg-brand-soft {
+  background: rgba(48, 167, 226, 0.08);
+}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Bancos de Dados{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4 text-brand"><i class="bi bi-hdd-stack"></i> Bancos de Dados PostgreSQL</h1>
+
+<div class="card card-brand shadow-sm mb-4">
+  <div class="card-header card-header-brand">
+    <i class="bi bi-plus-circle"></i> Criar novo banco de dados
+  </div>
+  <div class="card-body">
+    <form method="post" action="{{ url_for('create_database') }}" class="row g-2 align-items-end">
+      <div class="col-sm-8">
+        <label for="dbname" class="form-label">Nome do banco</label>
+        <input type="text" class="form-control" id="dbname" name="dbname"
+               pattern="[A-Za-z_][A-Za-z0-9_]*" required placeholder="ex: meu_banco">
+      </div>
+      <div class="col-sm-4">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-plus-lg"></i> Criar banco
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<h2 class="h5 mb-3 text-brand">Bancos existentes</h2>
+{% if databases %}
+<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+  {% for d in databases %}
+  <div class="col">
+    <div class="card card-brand h-100 shadow-sm">
+      <div class="card-body d-flex align-items-center gap-3">
+        <i class="bi bi-database"></i>
+        <div class="flex-grow-1">
+          <h3 class="h6 mb-0">{{ d }}</h3>
+        </div>
+      </div>
+      <div class="card-footer bg-white border-0 pt-0">
+        <a href="{{ url_for('list_tables', dbname=d) }}" class="btn btn-outline-primary btn-sm w-100">
+          <i class="bi bi-table"></i> Ver tabelas
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert bg-brand-soft border-0">
+  <i class="bi bi-info-circle"></i> Nenhum banco criado ainda.
+</div>
+{% endif %}
+{% endblock %}
