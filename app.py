@@ -171,6 +171,162 @@ def create_table(dbname):
     return redirect(url_for("list_tables", dbname=dbname))
 
 
+@app.route("/db/<dbname>/table/<table_name>/drop", methods=["POST"])
+def drop_table(dbname, table_name):
+    if not is_valid_identifier(dbname) or not is_valid_identifier(table_name):
+        abort(404)
+    conn = db.get_connection(dbname=dbname)
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql.SQL("DROP TABLE {}").format(sql.Identifier(table_name)))
+        conn.commit()
+        flash(f"Tabela '{table_name}' removida.")
+    except Exception:
+        conn.rollback()
+        app.logger.exception("Erro ao remover tabela '%s' em '%s'", table_name, dbname)
+        flash("Erro ao remover tabela. Verifique os logs do servidor.")
+    finally:
+        conn.close()
+    return redirect(url_for("list_tables", dbname=dbname))
+
+
+# ---------- CRUD de registros ----------
+
+@app.route("/db/<dbname>/table/<table_name>")
+def view_table(dbname, table_name):
+    if not is_valid_identifier(dbname) or not is_valid_identifier(table_name):
+        abort(404)
+    conn = db.get_connection(dbname=dbname)
+    try:
+        with conn.cursor() as cur:
+            columns = get_table_columns(cur, table_name)
+            if not columns:
+                abort(404)
+            col_names = [c[0] for c in columns]
+            cur.execute(
+                sql.SQL("SELECT {} FROM {} ORDER BY id").format(
+                    sql.SQL(", ").join(sql.Identifier(c) for c in col_names),
+                    sql.Identifier(table_name),
+                )
+            )
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    editable_columns = [c for c in columns if c[0] != "id"]
+    return render_template(
+        "table_crud.html",
+        dbname=dbname,
+        table_name=table_name,
+        editable_columns=editable_columns,
+        col_names=col_names,
+        rows=rows,
+    )
+
+
+@app.route("/db/<dbname>/table/<table_name>/add", methods=["POST"])
+def add_row(dbname, table_name):
+    if not is_valid_identifier(dbname) or not is_valid_identifier(table_name):
+        abort(404)
+    conn = db.get_connection(dbname=dbname)
+    try:
+        with conn.cursor() as cur:
+            columns = get_table_columns(cur, table_name)
+            if not columns:
+                abort(404)
+            editable = [c[0] for c in columns if c[0] != "id"]
+            values = [request.form.get(c) or None for c in editable]
+
+            query = sql.SQL("INSERT INTO {} ({}) VALUES ({})").format(
+                sql.Identifier(table_name),
+                sql.SQL(", ").join(sql.Identifier(c) for c in editable),
+                sql.SQL(", ").join(sql.Placeholder() * len(editable)),
+            )
+            cur.execute(query, values)
+        conn.commit()
+        flash("Registro adicionado com sucesso!")
+    except Exception:
+        conn.rollback()
+        app.logger.exception("Erro ao adicionar registro em '%s'.'%s'", dbname, table_name)
+        flash("Erro ao adicionar registro. Verifique os logs do servidor.")
+    finally:
+        conn.close()
+    return redirect(url_for("view_table", dbname=dbname, table_name=table_name))
+
+
+@app.route("/db/<dbname>/table/<table_name>/edit/<int:row_id>", methods=["GET", "POST"])
+def edit_row(dbname, table_name, row_id):
+    if not is_valid_identifier(dbname) or not is_valid_identifier(table_name):
+        abort(404)
+    conn = db.get_connection(dbname=dbname)
+    try:
+        with conn.cursor() as cur:
+            columns = get_table_columns(cur, table_name)
+            if not columns:
+                abort(404)
+            editable = [c[0] for c in columns if c[0] != "id"]
+
+            if request.method == "POST":
+                values = [request.form.get(c) or None for c in editable]
+                set_clause = sql.SQL(", ").join(
+                    sql.SQL("{} = {}").format(sql.Identifier(c), sql.Placeholder())
+                    for c in editable
+                )
+                query = sql.SQL("UPDATE {} SET {} WHERE id = %s").format(
+                    sql.Identifier(table_name), set_clause
+                )
+                cur.execute(query, values + [row_id])
+                conn.commit()
+                flash("Registro atualizado com sucesso!")
+                return redirect(url_for("view_table", dbname=dbname, table_name=table_name))
+
+            col_names = [c[0] for c in columns]
+            cur.execute(
+                sql.SQL("SELECT {} FROM {} WHERE id = %s").format(
+                    sql.SQL(", ").join(sql.Identifier(c) for c in col_names),
+                    sql.Identifier(table_name),
+                ),
+                (row_id,),
+            )
+            row = cur.fetchone()
+            if row is None:
+                abort(404)
+    finally:
+        conn.close()
+
+    row_dict = dict(zip(col_names, row))
+    return render_template(
+        "edit_row.html",
+        dbname=dbname,
+        table_name=table_name,
+        editable_columns=[c for c in columns if c[0] != "id"],
+        row=row_dict,
+    )
+
+
+@app.route("/db/<dbname>/table/<table_name>/delete/<int:row_id>", methods=["POST"])
+def delete_row(dbname, table_name, row_id):
+    if not is_valid_identifier(dbname) or not is_valid_identifier(table_name):
+        abort(404)
+    conn = db.get_connection(dbname=dbname)
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                sql.SQL("DELETE FROM {} WHERE id = %s").format(sql.Identifier(table_name)),
+                (row_id,),
+            )
+        conn.commit()
+        flash("Registro removido.")
+    except Exception:
+        conn.rollback()
+        app.logger.exception("Erro ao remover registro %s em '%s'.'%s'", row_id, dbname, table_name)
+        flash("Erro ao remover registro. Verifique os logs do servidor.")
+    finally:
+        conn.close()
+    return redirect(url_for("view_table", dbname=dbname, table_name=table_name))
+
+
+
 
 if __name__ == "__main__":
     debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
